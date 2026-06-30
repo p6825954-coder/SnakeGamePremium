@@ -1,0 +1,39 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.snakegame.premium'
+    compileSdk 33
+    defaultConfig {
+        applicationId "com.snakegame.premium"
+        minSdk 26
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    signingConfigs {
+        release {
+            storeFile file("release.keystore")
+            storePassword "android"
+            keyAlias "snakegame"
+            keyPassword "android"
+        }
+    }
+}
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'io.socket:socket.io-client:2.1.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
+}

@@ -1,0 +1,3 @@
+-keep class com.snakegame.premium.** { *; }
+-keep class io.socket.** { *; }
+-keep class org.json.** { *; }
