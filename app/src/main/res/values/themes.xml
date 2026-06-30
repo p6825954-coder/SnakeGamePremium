@@ -1,8 +1,10 @@
 <resources>
-    <style name="Theme.Material3.Dark.NoActionBar" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Theme.SnakeGame" parent="Theme.AppCompat.NoActionBar">
         <item name="colorPrimary">#FF00FF88</item>
-        <item name="colorOnPrimary">#FF121212</item>
+        <item name="colorPrimaryDark">#FF00CC66</item>
+        <item name="colorAccent">#FF00FF88</item>
         <item name="android:statusBarColor">#FF121212</item>
         <item name="android:navigationBarColor">#FF121212</item>
+        <item name="android:windowBackground">@color/background_dark</item>
     </style>
 </resources>
