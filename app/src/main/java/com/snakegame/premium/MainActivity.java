@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.Gravity;
 import android.view.View;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.ScaleAnimation;
 import android.widget.*;
 import java.util.ArrayList;
@@ -23,7 +22,6 @@ public class MainActivity extends Activity {
     private Handler handler = new Handler();
     private int score = 0;
     private boolean gameOver = false;
-    private Random rand = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,10 +153,10 @@ public class MainActivity extends Activity {
         private int dirX = 1, dirY = 0;
         private int grid = 40;
         private int score = 0;
-        private Handler h = new Handler();
+        private Handler gameHandler = new Handler();
         private boolean running = true;
         private Paint snakeP, foodP, bgP, gridP;
-        private int w, h;
+        private int viewW, viewH;
 
         public SnakeView(Activity ctx) {
             super(ctx);
@@ -172,7 +170,7 @@ public class MainActivity extends Activity {
             gridP = new Paint(); gridP.setColor(0xFF333333); gridP.setStyle(Paint.Style.STROKE);
         }
 
-        public void startGame() { running = true; h.postDelayed(gameLoop, 200); }
+        public void startGame() { running = true; gameHandler.postDelayed(gameLoop, 200); }
         public void setDirection(int x, int y) { if (x != -dirX && y != -dirY) { dirX = x; dirY = y; } }
         public int getScore() { return score; }
 
@@ -187,16 +185,16 @@ public class MainActivity extends Activity {
                 if (newHead.equals(food)) { score++; food = new Point(new Random().nextInt(20), new Random().nextInt(20)); }
                 else { body.remove(body.size()-1); }
                 invalidate();
-                h.postDelayed(this, 200);
+                gameHandler.postDelayed(this, 200);
             }
         };
 
-        @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) { super.onSizeChanged(w, h, oldw, oldh); this.w = w; this.h = h; }
+        @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) { super.onSizeChanged(w, h, oldw, oldh); viewW = w; viewH = h; }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-            canvas.drawRect(0,0,w,h,bgP);
-            for (int i=0;i<=w;i+=grid) canvas.drawLine(i,0,i,h,gridP);
-            for (int i=0;i<=h;i+=grid) canvas.drawLine(0,i,w,i,gridP);
+            canvas.drawRect(0,0,viewW,viewH,bgP);
+            for (int i=0;i<=viewW;i+=grid) canvas.drawLine(i,0,i,viewH,gridP);
+            for (int i=0;i<=viewH;i+=grid) canvas.drawLine(0,i,viewW,i,gridP);
             for (Point p : body) {
                 RectF rect = new RectF(p.x*grid+2, p.y*grid+2, (p.x+1)*grid-2, (p.y+1)*grid-2);
                 canvas.drawRoundRect(rect, 8,8, snakeP);
