@@ -10,9 +10,9 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Generate keystore
+      - name: Generate debug keystore
         run: |
-          keytool -genkey -v -keystore app/release.keystore -storepass android -alias snakegame -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=SnakeGame,O=Premium,C=US" 2>/dev/null
+          keytool -genkey -v -keystore app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" 2>/dev/null
       - name: Build Release
         run: |
           chmod +x gradlew

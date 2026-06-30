@@ -15,7 +15,7 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.debug
         }
     }
     compileOptions {
@@ -23,10 +23,10 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     signingConfigs {
-        release {
-            storeFile file("release.keystore")
+        debug {
+            storeFile file("debug.keystore")
             storePassword "android"
-            keyAlias "snakegame"
+            keyAlias "androiddebugkey"
             keyPassword "android"
         }
     }
