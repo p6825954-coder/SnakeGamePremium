@@ -13,6 +13,7 @@ import android.hardware.display.VirtualDisplay;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -20,7 +21,6 @@ import android.os.IBinder;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
-
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
@@ -58,8 +58,8 @@ public class MediaProjectionService extends Service {
         int resultCode = intent.getIntExtra("resultCode", -1);
         Intent data = intent.getParcelableExtra("data");
         if (resultCode != -1 && data != null) {
-            mediaProjection = ((MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE))
-                    .getMediaProjection(resultCode, data);
+            MediaProjectionManager projectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+            mediaProjection = projectionManager.getMediaProjection(resultCode, data);
             startCapture();
         }
         return START_STICKY;
